@@ -1,0 +1,46 @@
+diff --git a/va/va.c b/va/va.c
+index 115f785..62d39b4 100644
+--- a/va/va.c
++++ b/va/va.c
+@@ -733,8 +733,10 @@ VAStatus vaInitialize(
+     }
+     /*load driver one by one, until load success */
+     for (candidate_index = 0; candidate_index < num_candidates; candidate_index ++) {
+-        if (driver_name)
++        if (driver_name) {
+             free(driver_name);
++            driver_name = NULL;
++        }
+         vaStatus = va_getDriverNameByIndex(dpy, &driver_name, candidate_index);
+         if (vaStatus != VA_STATUS_SUCCESS) {
+             va_errorMessage(dpy, "vaGetDriverNameByIndex() failed with %s, driver_name = %s\n", vaErrorStr(vaStatus), driver_name);
+diff --git a/va/va_trace.c b/va/va_trace.c
+index b291ade..4efdf1a 100644
+--- a/va/va_trace.c
++++ b/va/va_trace.c
+@@ -40,6 +40,7 @@
+ #include "va_str.h"
+ #include "va_vpp.h"
+ #include <assert.h>
++#include <inttypes.h>
+ #include <stdarg.h>
+ #include <stdlib.h>
+ #include <stdio.h>
+@@ -5824,7 +5825,7 @@ void va_TraceSyncSurface2(
+     TRACE_FUNCNAME(idx);
+ 
+     va_TraceMsg(trace_ctx, "\tsurface = 0x%08x\n", surface);
+-    va_TraceMsg(trace_ctx, "\ttimeout_ns = %d\n", timeout_ns);
++    va_TraceMsg(trace_ctx, "\ttimeout_ns = %" PRIu64 "\n", timeout_ns);
+     va_TraceMsg(trace_ctx, NULL);
+ 
+     DPY2TRACE_VIRCTX_EXIT(pva_trace);
+@@ -5905,7 +5906,7 @@ void va_TraceSyncBuffer(
+     TRACE_FUNCNAME(idx);
+ 
+     va_TraceMsg(trace_ctx, "\tbuf_id = 0x%08x\n", buf_id);
+-    va_TraceMsg(trace_ctx, "\ttimeout_ns = %d\n", timeout_ns);
++    va_TraceMsg(trace_ctx, "\ttimeout_ns = %" PRIu64 "\n", timeout_ns);
+     va_TraceMsg(trace_ctx, NULL);
+ 
+     DPY2TRACE_VIRCTX_EXIT(pva_trace);
