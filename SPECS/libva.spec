@@ -1,33 +1,33 @@
 #global pre_release .pre1
 
 Name:		libva
-Version:	2.11.0
-Release:	5%{?dist}
+Version:	2.20.0
+Release:	1%{?dist}
 Summary:	Video Acceleration (VA) API for Linux
 License:	MIT
 URL:		https://github.com/intel/libva
 Source0:	%{url}/archive/%{version}%{?pre_release}/%{name}-%{version}%{?pre_release}.tar.gz
-# Prefer -fstack-protector-strong over -fstack-protector
-Patch0:		libva-2.11.0-fstack-protector-strong.patch
 
-BuildRequires:	libtool
+BuildRequires:  meson
+BuildRequires:  gcc
 
 BuildRequires:	libudev-devel
+%{!?_without_xorg:
 BuildRequires:	libXext-devel
 BuildRequires:	libXfixes-devel
+}
 BuildRequires:	libdrm-devel
 BuildRequires:	libpciaccess-devel
 BuildRequires:	mesa-libEGL-devel
 BuildRequires:	mesa-libGL-devel
 BuildRequires:	mesa-libGLES-devel
 %{!?_without_wayland:
-BuildRequires:	wayland-devel
-BuildRequires:	pkgconfig(wayland-client) >= 1
-BuildRequires:	pkgconfig(wayland-scanner) >= 1
-BuildRequires:	make
+BuildRequires:  wayland-devel
+BuildRequires:  pkgconfig(wayland-client) >= 1
+BuildRequires:  pkgconfig(wayland-scanner) >= 1
 }
 # owns the %%{_libdir}/dri directory
-Requires:	mesa-dri-filesystem
+Requires:	mesa-filesystem%{_isa}
 
 %description
 Libva is a library providing the VA API video acceleration API.
@@ -35,7 +35,6 @@ Libva is a library providing the VA API video acceleration API.
 %package	devel
 Summary:	Development files for %{name}
 Requires:	%{name}%{_isa} = %{version}-%{release}
-Requires:	pkgconfig
 
 %description	devel
 The %{name}-devel package contains libraries and header files for
@@ -44,22 +43,16 @@ developing applications that use %{name}.
 
 %prep
 %autosetup -p1 -n %{name}-%{version}%{?pre_release}
-autoreconf -vif
 
 %build
-%configure --disable-static \
-  --enable-glx \
-%{?_without_wayland:--disable-wayland}
+%meson \
+%{?_without_xorg: -Dwith_glx=no -Dwith_x11=no} \
+%{?_without_wayland: -Dwith_wayland=no}
 
-# remove rpath from libtool
-sed -i.rpath 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool
-sed -i.rpath 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
-
-%make_build
+%meson_build
 
 %install
-%make_install INSTALL="install -p"
-find %{buildroot} -regex ".*\.la$" | xargs rm -f --
+%meson_install
 
 %ldconfig_scriptlets
 
@@ -67,7 +60,15 @@ find %{buildroot} -regex ".*\.la$" | xargs rm -f --
 %doc NEWS
 %license COPYING
 %ghost %{_sysconfdir}/libva.conf
-%{_libdir}/libva*.so.*
+%{_libdir}/libva.so.2*
+%{_libdir}/libva-drm.so.2*
+%{!?_without_wayland:
+%{_libdir}/libva-wayland.so.2*
+}
+%{!?_without_xorg:
+%{_libdir}/libva-x11.so.2*
+%{_libdir}/libva-glx.so.2*
+}
 
 %files devel
 %{_includedir}/va
@@ -75,6 +76,9 @@ find %{buildroot} -regex ".*\.la$" | xargs rm -f --
 %{_libdir}/pkgconfig/libva*.pc
 
 %changelog
+* Tue Oct 24 2023 Than Ngo <than@redhat.com> - 2.20.0-1
+- RHEL-6895, rebase to 2.20.0
+
 * Tue Apr 26 2022 Jiri Kucera <jkucera@redhat.com> - 2.11.0-5
 - Rebuild
   Resolves: #2059006
