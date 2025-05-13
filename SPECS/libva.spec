@@ -1,7 +1,7 @@
 #global pre_release .pre1
 
 Name:		libva
-Version:	2.20.0
+Version:	2.22.0
 Release:	1%{?dist}
 Summary:	Video Acceleration (VA) API for Linux
 License:	MIT
@@ -76,6 +76,9 @@ developing applications that use %{name}.
 %{_libdir}/pkgconfig/libva*.pc
 
 %changelog
+* Wed Dec 18 2024 Than Ngo <than@redhat.com> - 2.22.0-1
+- Resolves: RHEL-59629, rebase to 2.22.0
+
 * Tue Oct 24 2023 Than Ngo <than@redhat.com> - 2.20.0-1
 - RHEL-6895, rebase to 2.20.0
 
